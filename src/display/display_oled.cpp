@@ -43,7 +43,8 @@
 // Screen cycling (OLED has limited space, fewer screens)
 #define OLED_SCREEN_MAIN    0
 #define OLED_SCREEN_STATS   1
-#define OLED_SCREEN_COUNT   2
+#define OLED_SCREEN_INFO    2
+#define OLED_SCREEN_COUNT   3
 
 // ============================================================
 // U8g2 Display Object
@@ -190,23 +191,66 @@ static void drawStatsScreen(const display_data_t *data) {
     poolLine += data->poolConnected ? "OK" : "---";
     s_u8g2.drawStr(0, 22, poolLine.c_str());
 
+    // Ping (show '---' when unknown)
+    String pingVal = (data->avgLatency == 0) ? String("---") : String(data->avgLatency);
+    String pingLine = "Ping: " + pingVal + " ms";
+    s_u8g2.drawStr(0, 34, pingLine.c_str());
+
     // Difficulty
     String diffLine = "Diff: " + formatDiffCompact(data->poolDifficulty);
-    s_u8g2.drawStr(0, 34, diffLine.c_str());
+    s_u8g2.drawStr(0, 46, diffLine.c_str());
 
-    // Templates
+    // Templates (bottom line)
     String templLine = "Tmpl: " + String(data->templates);
-    s_u8g2.drawStr(0, 46, templLine.c_str());
+    s_u8g2.drawStr(0, 58, templLine.c_str());
 
     #if (OLED_HEIGHT == 64)
-        // WiFi signal
+        // WiFi signal (right aligned on bottom row)
         String rssiLine = "RSSI: ";
         if (data->wifiConnected) {
             rssiLine += String(data->wifiRssi) + "dBm";
         } else {
             rssiLine += "---";
         }
-        s_u8g2.drawStr(0, 58, rssiLine.c_str());
+        int rssiWidth = s_u8g2.getStrWidth(rssiLine.c_str());
+        s_u8g2.drawStr(OLED_WIDTH - rssiWidth, 58, rssiLine.c_str());
+    #endif
+
+    s_u8g2.sendBuffer();
+}
+
+static void drawSecondStatsScreen(const display_data_t *data) {
+    s_u8g2.clearBuffer();
+    s_u8g2.setFont(u8g2_font_6x10_tf);
+
+    // Title
+    s_u8g2.drawStr(0, 8, "MINER INFO");
+    s_u8g2.drawHLine(0, 10, OLED_WIDTH);
+
+    // Worker name (may be long — truncate at display width)
+    const char *worker = (data->workerName && data->workerName[0]) ? data->workerName : MINER_NAME;
+    s_u8g2.drawStr(0, 22, worker);
+
+    // Firmware version
+    String verLine = String("FW: ") + AUTO_VERSION;
+    s_u8g2.drawStr(0, 34, verLine.c_str());
+
+    #if (OLED_HEIGHT == 64)
+        // Block height
+        String blockLine = "Blk: ";
+        if (data->blockHeight > 0) {
+            blockLine += String(data->blockHeight);
+        } else {
+            blockLine += "---";
+        }
+        s_u8g2.drawStr(0, 46, blockLine.c_str());
+
+        // Shares rejected + CPU MHz x cores
+        String rejLine = "Rej:" + String(data->sharesRejected);
+        s_u8g2.drawStr(0, 58, rejLine.c_str());
+        String cpuLine = String(data->cpuMhz) + "MHz x" + String(data->cpuCores);
+        int cpuWidth = s_u8g2.getStrWidth(cpuLine.c_str());
+        s_u8g2.drawStr(OLED_WIDTH - cpuWidth, 58, cpuLine.c_str());
     #endif
 
     s_u8g2.sendBuffer();
@@ -269,6 +313,9 @@ void oled_display_update(const display_data_t *data) {
             break;
         case OLED_SCREEN_STATS:
             drawStatsScreen(data);
+            break;
+        case OLED_SCREEN_INFO:
+            drawSecondStatsScreen(data);
             break;
         default:
             drawMainScreen(data);

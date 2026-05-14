@@ -49,10 +49,22 @@ void stratum_reconnect();
  */
 bool stratum_is_connected();
 
+// Bit flags returned by stratum_get_state_flags()
+#define STRATUM_STATE_SOCKET_CONNECTED (1u << 0)
+#define STRATUM_STATE_SUBSCRIBED       (1u << 1)
+#define STRATUM_STATE_AUTHORIZED       (1u << 2)
+#define STRATUM_STATE_DIFFICULTY_READY (1u << 3)
+#define STRATUM_STATE_JOB_READY        (1u << 4)
+
 /**
  * Check if currently connected to backup pool
  */
 bool stratum_is_backup();
+
+/**
+ * Get startup/readiness state bits for compact monitor logging.
+ */
+uint8_t stratum_get_state_flags();
 
 /**
  * Get current pool URL

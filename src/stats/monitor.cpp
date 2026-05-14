@@ -15,6 +15,7 @@
 #include "../config/nvs_config.h"
 #include "../config/wifi_manager.h"
 #include "../logging.h"
+#include <soc/soc_caps.h>
 
 // Update intervals
 #define DISPLAY_UPDATE_MS   1000    // 1 second
@@ -98,6 +99,10 @@ static void updateDisplayData(display_data_t *data) {
     data->blocks32 = mstats->matches32;
     data->uptimeSeconds = (millis() - s_startTime) / 1000;
     data->avgLatency = mstats->avgLatency;
+    // CPU frequency for display
+    data->cpuMhz = getCpuFrequencyMhz();
+    // CPU cores
+    data->cpuCores = SOC_CPU_CORES_NUM;
 
     // Calculate display hashrate from the same live window family as the console.
     // Expose both the raw live window and a smoothed value for the UI.
@@ -139,6 +144,10 @@ static void updateDisplayData(display_data_t *data) {
     data->wifiConnected = (WiFi.status() == WL_CONNECTED);
     data->wifiRssi = data->wifiConnected ? WiFi.RSSI() : 0;
     data->ipAddress = wifi_manager_get_ip();
+
+    // Device identity
+    miner_config_t *cfg = nvs_config_get();
+    data->workerName = cfg ? cfg->workerName : "";
 
     // Live stats (thread-safe copy)
     live_stats_t lstats;
@@ -320,17 +329,36 @@ void monitor_task(void *param) {
 
                 // Total line: rate is derived from per-core sum (not EMA)
                 extern volatile uint32_t s_jobChanges;
-                Serial.printf("[STATS] Total: %.1f H/s (window %lus) | Shares: %u/%u | Ping: %u ms | Best: %.4f | Jobs: %lu (chg: %lu)\n",
+                // Prefer to show '---' when we have no latency sample yet (avgLatency==0)
+                char pingBuf[16];
+                if (displayData.avgLatency == 0) {
+                    snprintf(pingBuf, sizeof(pingBuf), "---");
+                } else {
+                    snprintf(pingBuf, sizeof(pingBuf), "%u", displayData.avgLatency);
+                }
+
+                Serial.printf("[STATS] Total: %.1f H/s (window %lus) | Shares: %u/%u | Ping: %s ms | Best: %.4f | Jobs: %lu (chg: %lu)\n",
                     totalHs,
                     (unsigned long)(statsElapsed / 1000),
                     displayData.sharesAccepted,
                     displayData.sharesAccepted + displayData.sharesRejected,
-                    displayData.avgLatency,
+                    pingBuf,
                     displayData.bestDifficulty,
                     (unsigned long)miner_get_stats()->templates,
                     (unsigned long)s_jobChanges);
                 Serial.printf("[STATS] Core0: %.1f H/s (%.0f%%, total %llu) | Core1: %.1f H/s (%.0f%%, total %llu)\n",
                     c0hs, c0pct, snap0, c1hs, c1pct, snap1);
+
+                uint8_t st = stratum_get_state_flags();
+                Serial.printf(
+                    "[BOOT] STR S%dU%dA%dD%dJ%d R%d\n",
+                    (st & STRATUM_STATE_SOCKET_CONNECTED) ? 1 : 0,
+                    (st & STRATUM_STATE_SUBSCRIBED) ? 1 : 0,
+                    (st & STRATUM_STATE_AUTHORIZED) ? 1 : 0,
+                    (st & STRATUM_STATE_DIFFICULTY_READY) ? 1 : 0,
+                    (st & STRATUM_STATE_JOB_READY) ? 1 : 0,
+                    displayData.poolConnected ? 1 : 0
+                );
 
                 if (displayData.poolName) {
                     if (displayData.poolWorkersTotal > 0) {

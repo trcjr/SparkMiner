@@ -307,10 +307,12 @@ static void drawHeader(const display_data_t *data) {
         uint16_t pingColor = data->poolConnected ? getPingColor(data->avgLatency) : COLOR_ERROR;
         if (data->poolConnected && data->poolFailovers > 0) pingColor = COLOR_WARNING;
         s_tft.fillCircle(poolX + 6, 26, 5, pingColor);
+        s_tft.setTextColor(pingColor);
+        s_tft.setCursor(poolX + 15, 22);
         if (data->poolConnected && data->avgLatency > 0) {
-            s_tft.setTextColor(pingColor);
-            s_tft.setCursor(poolX + 15, 22);
             s_tft.print(data->avgLatency);
+        } else {
+            s_tft.print("---");
         }
 
         // WAN status - middle (color coded by signal strength)
@@ -389,10 +391,12 @@ static void drawBottomStatusBar(const display_data_t *data) {
     uint16_t pingColor = data->poolConnected ? getPingColor(data->avgLatency) : COLOR_ERROR;
     if (data->poolConnected && data->poolFailovers > 0) pingColor = COLOR_WARNING;
     s_tft.fillCircle(poolX + 4, centerY + 8, 4, pingColor);
+    s_tft.setTextColor(pingColor);
+    s_tft.setCursor(poolX + 14, centerY + 4);
     if (data->poolConnected && data->avgLatency > 0) {
-        s_tft.setTextColor(pingColor);
-        s_tft.setCursor(poolX + 14, centerY + 4);
         s_tft.print(data->avgLatency);
+    } else {
+        s_tft.print("---");
     }
 }
 

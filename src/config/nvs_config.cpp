@@ -6,6 +6,8 @@
  */
 
 #include <Arduino.h>
+#include <ctype.h>
+#include <WiFi.h>
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include <board_config.h>
@@ -67,6 +69,109 @@ static void safeStrCpy(char *dest, const char *src, size_t maxLen) {
     } else {
         dest[0] = '\0';
     }
+}
+
+static void formatWifiApSuffix(char *suffix, size_t suffixLen) {
+    uint8_t mac[6] = {0};
+    WiFi.macAddress(mac);
+    snprintf(suffix, suffixLen, "%02X%02X", mac[4], mac[5]);
+}
+
+static void formatLegacyEfuseSuffix(char *suffix, size_t suffixLen) {
+    uint64_t mac = ESP.getEfuseMac();
+    snprintf(suffix, suffixLen, "%02X%02X",
+             static_cast<unsigned int>((mac >> 8) & 0xFF),
+             static_cast<unsigned int>(mac & 0xFF));
+}
+
+static bool isLegacyAutoWorkerName(const char *workerName) {
+    if (!workerName || workerName[0] == '\0') {
+        return false;
+    }
+
+    if (strcmp(workerName, MINER_NAME) == 0) {
+        return true;
+    }
+
+    size_t prefixLen = strlen(MINER_NAME);
+    if (strncmp(workerName, MINER_NAME, prefixLen) != 0 || workerName[prefixLen] != '_') {
+        return false;
+    }
+
+    const char *suffix = workerName + prefixLen + 1;
+    if (strlen(suffix) != 4) {
+        return false;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (!isxdigit((unsigned char)suffix[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool isLegacyEfuseAutoWorkerName(const char *workerName) {
+    if (!workerName || workerName[0] == '\0') {
+        return false;
+    }
+
+    char legacySuffix[8];
+    formatLegacyEfuseSuffix(legacySuffix, sizeof(legacySuffix));
+    return strcmp(workerName, legacySuffix) == 0;
+}
+
+static bool isCurrentWifiAutoWorkerName(const char *workerName) {
+    if (!workerName || workerName[0] == '\0') {
+        return false;
+    }
+
+    char wifiSuffix[8];
+    char currentAutoWorker[32];
+    formatWifiApSuffix(wifiSuffix, sizeof(wifiSuffix));
+    snprintf(currentAutoWorker, sizeof(currentAutoWorker), "%s.%s", MINER_NAME, wifiSuffix);
+
+    return strcmp(workerName, wifiSuffix) == 0 ||
+           strcmp(workerName, currentAutoWorker) == 0;
+}
+
+static bool isKnownAutoWorkerName(const char *workerName) {
+    if (isLegacyAutoWorkerName(workerName)) {
+        return true;
+    }
+
+    if (isLegacyEfuseAutoWorkerName(workerName)) {
+        return true;
+    }
+
+    if (isCurrentWifiAutoWorkerName(workerName)) {
+        return true;
+    }
+
+    return false;
+}
+
+static bool setUniqueDefaultWorkerName(char *workerName, size_t maxLen) {
+    if (!workerName || maxLen == 0) {
+        return false;
+    }
+
+    if (workerName[0] != '\0' && !isKnownAutoWorkerName(workerName)) {
+        return false;
+    }
+
+    char wifiSuffix[8];
+    char currentAutoWorker[32];
+    formatWifiApSuffix(wifiSuffix, sizeof(wifiSuffix));
+    snprintf(currentAutoWorker, sizeof(currentAutoWorker), "%s_%s", MINER_NAME, wifiSuffix);
+
+    if (strcmp(workerName, currentAutoWorker) == 0) {
+        return false;
+    }
+
+    safeStrCpy(workerName, currentAutoWorker, maxLen);
+    return true;
 }
 
 /**
@@ -464,6 +569,13 @@ void nvs_config_init() {
         Serial.println("[NVS] No config file found, using defaults");
     }
 
+    if (loadedFromNvs && setUniqueDefaultWorkerName(s_config.workerName, sizeof(s_config.workerName))) {
+        Serial.printf("[NVS] Worker name defaulted to %s\n", s_config.workerName);
+        if (!nvs_config_save(&s_config)) {
+            Serial.println("[NVS] WARNING: Failed to persist generated worker name");
+        }
+    }
+
     s_initialized = true;
 }
 
@@ -583,7 +695,7 @@ void nvs_config_reset(miner_config_t *config) {
     config->timezoneOffset = 0;    // UTC+0 default
 
     // Miner defaults
-    safeStrCpy(config->workerName, "SparkMiner", sizeof(config->workerName));
+    setUniqueDefaultWorkerName(config->workerName, sizeof(config->workerName));
     config->targetDifficulty = DESIRED_DIFFICULTY;
 
     // Stats API defaults - enabled but no external fetch by default

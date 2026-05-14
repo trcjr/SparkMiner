@@ -69,8 +69,9 @@ static void saveParamsCallback() {
     if (s_paramWallet && strlen(s_paramWallet->getValue()) > 0) {
         strncpy(config->wallet, s_paramWallet->getValue(), MAX_WALLET_LEN);
     }
-    if (s_paramWorkerName) {
-        strncpy(config->workerName, s_paramWorkerName->getValue(), 31);
+    if (s_paramWorkerName && strlen(s_paramWorkerName->getValue()) > 0) {
+        strncpy(config->workerName, s_paramWorkerName->getValue(), sizeof(config->workerName) - 1);
+        config->workerName[sizeof(config->workerName) - 1] = '\0';
     }
     if (s_paramPoolUrl && strlen(s_paramPoolUrl->getValue()) > 0) {
         strncpy(config->poolUrl, s_paramPoolUrl->getValue(), MAX_POOL_URL_LEN);

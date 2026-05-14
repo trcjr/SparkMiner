@@ -37,6 +37,7 @@ struct display_data_s {
     uint32_t uptimeSeconds;
     uint32_t avgLatency;        // Average pool latency in ms
     uint32_t cpuMhz;            // CPU frequency in MHz
+    uint8_t cpuCores;           // Number of CPU cores
 
     // Pool info
     bool poolConnected;
@@ -55,6 +56,9 @@ struct display_data_s {
     bool wifiConnected;
     int8_t wifiRssi;            // WiFi signal strength in dBm
     const char *ipAddress;
+
+    // Device identity
+    const char *workerName;     // Worker name from NVS config
 
     // Live stats (from API) - fixed char arrays
     float btcPrice;

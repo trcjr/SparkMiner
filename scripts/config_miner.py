@@ -29,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--wifi-password", required=True, help="Wi-Fi password")
 
     p.add_argument("--wallet", required=True, help="Primary wallet address")
-    p.add_argument("--worker", default="SparkMiner", help="Worker name")
+    p.add_argument("--worker", default="", help="Worker name (blank keeps device default)")
 
     p.add_argument("--pool-url", default="public-pool.io", help="Primary pool host")
     p.add_argument("--pool-port", type=int, default=21496, help="Primary pool port")
