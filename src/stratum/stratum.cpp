@@ -16,6 +16,7 @@
 #include "stratum_session_diag.h"
 #include "../mining/miner.h"
 #include "../logging.h"
+#include "../config/nvs_config.h"
 
 // ============================================================
 // Constants
@@ -818,6 +819,20 @@ void stratum_task(void *param) {
             usingBackup = false;
 
             logSessionSnapshot("reconnect", "connect_primary", false);
+            // Preflight logs: WiFi/network/config state for debugging connect failures
+            miner_config_t *cfg = nvs_config_get();
+            Serial.printf("[STRATUM] Preflight: wifi_status=%d ip=%s ssid=%s rssi=%d host=%s port=%d wallet=%s stats_api=%s cfg_chksum=%08x uptime_s=%lu\n",
+                          WiFi.status(),
+                          WiFi.localIP().toString().c_str(),
+                          WiFi.SSID().c_str(),
+                          WiFi.RSSI(),
+                          s_primaryPool.url,
+                          s_primaryPool.port,
+                          cfg->wallet[0] ? cfg->wallet : (const char*)"(empty)",
+                          cfg->statsApiUrl[0] ? cfg->statsApiUrl : (const char*)"(none)",
+                          cfg->checksum,
+                          (unsigned long)(millis() / 1000));
+
             log_linef("[STRATUM] Connecting to %s:%d...",
                       s_primaryPool.url, s_primaryPool.port);
 
@@ -943,6 +958,11 @@ bool stratum_submit_share(const submit_entry_t *entry) {
 }
 
 void stratum_reconnect() {
+    // Defer external reconnects if WiFi is not up yet to avoid poisoning initial state
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[STRATUM] Deferring reconnect: WiFi not connected");
+        return;
+    }
     requestReconnect("external_request");
 }
 
@@ -967,7 +987,9 @@ uint8_t stratum_get_state_flags() {
 }
 
 const char* stratum_get_pool() {
-    return s_currentPoolUrl;
+    if (s_currentPoolUrl[0]) return s_currentPoolUrl;
+    if (s_primaryPool.url[0]) return s_primaryPool.url;
+    return "";
 }
 
 void stratum_set_pool(const char *url, int port, const char *wallet, const char *password, const char *workerName) {

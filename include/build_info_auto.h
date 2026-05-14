@@ -2,15 +2,15 @@
 #ifndef BUILD_INFO_AUTO_H
 #define BUILD_INFO_AUTO_H
 
-#define BUILD_GIT_HASH "165bd16"
-#define BUILD_GIT_DESCRIBE "165bd16-dirty"
+#define BUILD_GIT_HASH "f2b77c9"
+#define BUILD_GIT_DESCRIBE "f2b77c9-dirty"
 #define BUILD_GIT_DIRTY 1
 
-#define BUILD_PIO_ENV "esp32-2432s028-2usb"
-#define BUILD_PIO_BOARD "esp32dev"
-#define BUILD_PIO_MCU "esp32"
+#define BUILD_PIO_ENV "heltec-wifi-lora32-v3"
+#define BUILD_PIO_BOARD "heltec_wifi_lora_32_V3"
+#define BUILD_PIO_MCU "esp32s3"
 #define BUILD_PIO_F_CPU "240000000L"
 
-#define BUILD_UTC_TIMESTAMP "2026-05-14T01:54:07Z"
+#define BUILD_UTC_TIMESTAMP "2026-05-14T18:06:51Z"
 
 #endif // BUILD_INFO_AUTO_H

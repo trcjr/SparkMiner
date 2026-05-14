@@ -10,6 +10,7 @@
 #include "nvs_config.h"
 #include "../stratum/stratum.h"
 #include "../display/display.h"
+#include "runtime_tasks.h"
 
 // WiFiManager instance
 static WiFiManager s_wm;
@@ -151,7 +152,13 @@ static void saveParamsCallback() {
         // Update stratum
         stratum_set_pool(config->poolUrl, config->poolPort,
                         config->wallet, config->poolPassword, config->workerName);
+        // Ensure captive portal/AP is stopped before triggering pool connect
+        WiFi.softAPdisconnect(true);
+        s_portalRunning = false;
+
+        // Trigger reconnect in stratum if it's running; if not, start tasks dynamically
         stratum_reconnect();
+        start_runtime_tasks_if_needed();
     } else {
         Serial.println("[WIFI] Failed to save configuration");
     }

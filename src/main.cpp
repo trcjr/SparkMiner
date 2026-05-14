@@ -37,6 +37,7 @@ extern "C" {
 #include "display/display.h"
 #include "logging.h"
 #include <build_info_auto.h>
+#include "runtime_tasks.h"
 
 // Task handles
 TaskHandle_t miner0Task = NULL;
@@ -714,6 +715,78 @@ void setupTasks() {
     } else {
         log_line("[INIT] Monitor task created (mining disabled - no wallet)");
         log_line("[INIT] Configure via captive portal or SD card config.json");
+    }
+}
+
+// Dynamically start runtime tasks (Stratum + Miner) after configuration is saved
+void start_runtime_tasks_if_needed() {
+    // Only start if we have a valid configuration
+    if (!nvs_config_is_valid()) return;
+
+    // If WiFi isn't connected yet, wait a short while for it to settle
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        attempts++;
+    }
+
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[RUNTIME] WiFi not connected yet, deferring task start");
+        return;
+    }
+
+    // Small settle time to ensure DHCP and routing are stable
+    Serial.println("[RUNTIME] WiFi connected, waiting 2s to settle before starting tasks");
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    // Start Stratum task if not already running
+    if (stratumTask == NULL) {
+        xTaskCreatePinnedToCore(
+            stratum_task,
+            "Stratum",
+            STRATUM_STACK,
+            NULL,
+            STRATUM_PRIORITY,
+            &stratumTask,
+            STRATUM_CORE
+        );
+        Serial.println("[RUNTIME] Stratum task created");
+    }
+
+    // Start miner tasks if not present
+    if (miner0Task == NULL && miner1Task == NULL && nvs_config_is_valid()) {
+        #if (SOC_CPU_CORES_NUM >= 2)
+            xTaskCreatePinnedToCore(
+                miner_task_core1,
+                "Miner1",
+                MINER_1_STACK,
+                NULL,
+                MINER_1_PRIORITY,
+                &miner1Task,
+                MINER_1_CORE
+            );
+
+            xTaskCreatePinnedToCore(
+                miner_task_core0,
+                "Miner0",
+                MINER_0_STACK,
+                NULL,
+                MINER_0_PRIORITY,
+                &miner0Task,
+                MINER_0_CORE
+            );
+            Serial.println("[RUNTIME] Miner tasks created (dual-core)");
+        #else
+            xTaskCreate(
+                miner_task_core0,
+                "Miner",
+                MINER_0_STACK,
+                NULL,
+                MINER_0_PRIORITY,
+                &miner0Task
+            );
+            Serial.println("[RUNTIME] Miner task created (single-core)");
+        #endif
     }
 }
 
