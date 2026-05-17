@@ -148,6 +148,14 @@ needs_boot_mode = true
 port_changes_on_reset = true
 group = "Headless (No Display)"
 
+[boards.wemos-lolin32-oled]
+name = "Wemos Lolin32 + OLED"
+env = "wemos-lolin32-oled"
+chip = "esp32"
+description = "Wemos Lolin32 with SSD1306 OLED (SDA=GPIO5, SCL=GPIO4, RST=GPIO16, addr=0x3C)"
+needs_boot_mode = false
+group = "OLED Display"
+
 # ============================================================
 # Release Settings
 # ============================================================

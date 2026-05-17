@@ -72,6 +72,10 @@ python devtool.py build -b cyd-2usb
 python devtool.py flash -b cyd-2usb
 python devtool.py monitor
 
+# Wemos Lolin32 + OLED
+python devtool.py build -b wemos-lolin32-oled
+python devtool.py flash -b wemos-lolin32-oled
+
 # All-in-one: build, flash, and monitor
 python devtool.py all -b cyd-2usb
 ```
@@ -136,7 +140,8 @@ Find your board below and download the matching firmware from [Releases](https:/
 | Your Board | Firmware File | Notes |
 |------------|---------------|-------|
 | **ESP32 DevKit** | `esp32-headless_firmware.bin` | Any generic ESP32, GPIO LED status |
-| **ESP32-WROOM-32** | `esp32-headless_firmware.bin` | GPIO LED on pin 2 |
+| **ESP32-WROOM-32** | `esp32-headless_firmware.bin` | Headless — GPIO LED on pin 2 |
+| **Wemos Lolin32 + OLED** | `wemos-lolin32-oled_firmware.bin` | 128x64 SSD1306 I2C (SDA=5, SCL=4, RST=16, addr=0x3C) |
 | **NodeMCU ESP32** | `esp32-headless_firmware.bin` | Use headless firmware |
 
 ### File Types
@@ -163,6 +168,7 @@ Find your board below and download the matching firmware from [Releases](https:/
 | CYD (ESP32-2432S028) | ✅ Full | Primary target, 3 variants |
 | Freenove ESP32-S3 | ✅ Full | 2.8" IPS with SD_MMC |
 | ESP32-S3/C3 + OLED | ✅ Full | 128x64 SSD1306 I2C |
+| Wemos Lolin32 + OLED | ✅ Full | 128x64 SSD1306 I2C (SDA=GPIO5, SCL=GPIO4, RST=GPIO16, addr=0x3C) |
 | ESP32-S3/C3 Mini | ✅ Full | RGB LED status |
 | ESP32 Headless | ✅ Full | GPIO LED status indicator |
 | LILYGO T-Display S3 | ❌ None | Not yet supported |
