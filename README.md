@@ -144,6 +144,12 @@ Find your board below and download the matching firmware from [Releases](https:/
 | **Wemos Lolin32 + OLED** | `wemos-lolin32-oled_firmware.bin` | 128x64 SSD1306 I2C (SDA=5, SCL=4, RST=16, addr=0x3C) |
 | **NodeMCU ESP32** | `esp32-headless_firmware.bin` | Use headless firmware |
 
+### ESP32 TFT (ST7789) Boards
+
+| Your Board | Firmware File | Notes |
+|------------|---------------|-------|
+| **IdeaSpark 1.9" ST7789** | `ideaspark-19in-st7789_firmware.bin` | 170x320 ST7789 SPI TFT (MOSI=23, SCLK=18, CS=15, DC=2, RST=4, BL=32) |
+
 ### File Types
 
 - **`*_firmware.bin`** - Use with **Bruce Launcher** or SD card boot
@@ -169,6 +175,7 @@ Find your board below and download the matching firmware from [Releases](https:/
 | Freenove ESP32-S3 | ✅ Full | 2.8" IPS with SD_MMC |
 | ESP32-S3/C3 + OLED | ✅ Full | 128x64 SSD1306 I2C |
 | Wemos Lolin32 + OLED | ✅ Full | 128x64 SSD1306 I2C (SDA=GPIO5, SCL=GPIO4, RST=GPIO16, addr=0x3C) |
+| IdeaSpark 1.9" ST7789 | ✅ Full | 170x320 ST7789 SPI TFT (ESP32 DevKit-style) |
 | ESP32-S3/C3 Mini | ✅ Full | RGB LED status |
 | ESP32 Headless | ✅ Full | GPIO LED status indicator |
 | LILYGO T-Display S3 | ❌ None | Not yet supported |

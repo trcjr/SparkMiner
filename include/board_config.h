@@ -186,6 +186,40 @@
     // SHA Implementation: Defined in platformio.ini (USE_HARDWARE_SHA=1)
 
 // ============================================================
+// IdeaSpark ESP32 - 1.9" ST7789 TFT (170x320, SPI)
+// ============================================================
+#elif defined(IDEASPARK_19_ST7789)
+    #define BOARD_NAME "IdeaSpark-1.9-ST7789"
+
+    #ifndef USE_DISPLAY
+        #define USE_DISPLAY 1
+    #endif
+    #define DISPLAY_TYPE_TFT 1
+
+    #ifdef TFT_WIDTH
+        #undef TFT_WIDTH
+    #endif
+    #define TFT_WIDTH 170
+
+    #ifdef TFT_HEIGHT
+        #undef TFT_HEIGHT
+    #endif
+    #define TFT_HEIGHT 320
+
+    // Backlight pin
+    #ifndef TFT_BL_PIN
+        #define TFT_BL_PIN 32
+    #endif
+
+    // Button
+    #ifndef BUTTON_PIN
+        #define BUTTON_PIN 0
+    #endif
+    #define BUTTON_ACTIVE_LOW 1
+
+    // SHA Implementation: Defined in platformio.ini (USE_HARDWARE_SHA=1)
+
+// ============================================================
 // ESP32-S3 DevKit - Hardware SHA (headless)
 // ============================================================
 #elif defined(ESP32_S3_DEVKIT)

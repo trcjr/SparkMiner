@@ -46,6 +46,11 @@
     #define LCD_BL_PIN      4
 #endif
 
+// IdeaSpark 1.9" ST7789 (170x320, SPI)
+#if defined(IDEASPARK_19_ST7789)
+    #define LCD_BL_PIN      32
+#endif
+
 // PWM settings for backlight
 #define LEDC_CHANNEL    0
 #define LEDC_FREQ       5000
@@ -70,7 +75,7 @@
     #define LINE_HEIGHT     16
     #define HEADER_HEIGHT   24
     #define SMALL_DISPLAY   1
-#elif defined(LILYGO_T_DISPLAY_S3)
+#elif defined(LILYGO_T_DISPLAY_S3) || defined(IDEASPARK_19_ST7789)
     #define MARGIN          6
     #define LINE_HEIGHT     18
     #define HEADER_HEIGHT   30
