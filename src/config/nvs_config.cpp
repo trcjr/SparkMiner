@@ -571,7 +571,11 @@ void nvs_config_reset(miner_config_t *config) {
     // Display defaults
     config->brightness = 100;
     config->screenTimeout = 0;  // Never timeout
+#ifdef BOARD_DEFAULT_ROTATION
+    config->rotation = BOARD_DEFAULT_ROTATION;
+#else
     config->rotation = 0;       // Portrait USB Top (default)
+#endif
     config->displayEnabled = true;
     config->invertColors = true;   // Dark theme (default) - CYD panel is inverted, so invertDisplay(true) = dark
     config->timezoneOffset = 0;    // UTC+0 default

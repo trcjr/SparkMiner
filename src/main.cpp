@@ -358,6 +358,13 @@ void setup() {
     Serial.println("[INIT] Configuring watchdog timer (30s timeout)...");
     esp_task_wdt_init(30, true);  // 30 second timeout, panic on trigger
 
+    // The WiFi driver (priority 23) can legitimately monopolize CPU 0 during
+    // error recovery (e.g. lmacProcessTxRtsError), starving the IDLE task for
+    // up to 30s and triggering a false WDT panic. Unsubscribe CPU 0's IDLE task
+    // so WiFi recovery doesn't look like a hang. CPU 1's IDLE task remains
+    // monitored since our mining code fully controls that core.
+    esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));
+
     // Disable power management (no CPU throttling/sleep)
     setupPowerManagement();
 

@@ -219,6 +219,9 @@
 
     // SHA Implementation: Defined in platformio.ini (USE_HARDWARE_SHA=1)
 
+    // Default display rotation: 3 = Landscape, USB left
+    #define BOARD_DEFAULT_ROTATION 3
+
 // ============================================================
 // ESP32-S3 DevKit - Hardware SHA (headless)
 // ============================================================
