@@ -2,6 +2,13 @@
 
 All notable changes to SparkMiner will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **IdeaSpark 1.9" ST7789 support** - ESP32 DevKit-style board with 170x320 ST7789 TFT (SPI)
+  - New build environment: `ideaspark-19in-st7789`
+  - Pins: MOSI=23, SCLK=18, CS=15, DC=2, RST=4, BL=32 — no SD card slot
+
 ## [v2.9.3] - 2026-01-22
 
 ### Added

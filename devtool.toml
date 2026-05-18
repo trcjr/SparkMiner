@@ -156,6 +156,16 @@ description = "Wemos Lolin32 with SSD1306 OLED (SDA=GPIO5, SCL=GPIO4, RST=GPIO16
 needs_boot_mode = false
 group = "OLED Display"
 
+[boards.ideaspark-19in-st7789]
+name = "IdeaSpark 1.9\" ST7789"
+env = "ideaspark-19in-st7789"
+chip = "esp32"
+description = "ESP32 DevKit-style board with 1.9\" 170x320 ST7789 TFT (SPI)"
+flash_baud = 460800
+flash_freq = "40m"
+needs_boot_mode = false
+group = "ESP32 TFT (ST7789)"
+
 # ============================================================
 # Release Settings
 # ============================================================
