@@ -1,4 +1,4 @@
-# SparkMiner v2.9.5
+# SparkMiner v2.9.6-pre
 
 **High-performance Bitcoin solo miner for ESP32, ESP32-S3 & ESP32-C3**
 
@@ -40,6 +40,7 @@ The easiest way to install and manage SparkMiner on CYD boards (1-USB or 2-USB v
 - No need to re-flash via USB for updates
 - Config persists on SD card
 
+
 ### Option 2: Direct USB Flashing
 
 1. Download the latest `*_factory.bin` firmware from [Releases](https://github.com/SneezeGUI/SparkMiner/releases)
@@ -49,6 +50,7 @@ The easiest way to install and manage SparkMiner on CYD boards (1-USB or 2-USB v
    ```
 3. Power on the board - it will create a WiFi access point
 4. Connect to `SparkMiner-XXXX` WiFi and configure via the web portal
+
 
 ### Option 3: Build from Source
 
@@ -63,9 +65,15 @@ python -m venv .venv
 # source .venv/bin/activate  # Linux/Mac
 pip install platformio
 
+
 # Use the interactive devtool (recommended)
 devtool.bat          # Windows - interactive menu
 python devtool.py    # Cross-platform
+
+# Or configure a device via WiFi AP (no SD card needed):
+python scripts/config_miner.py --host 192.168.4.1 --ssid "YourWiFi" --wifi-password "YourPass" --wallet "bc1q..." [other options]
+
+See the "Command-Line Configuration Tool" section below for details.
 
 # Or build a specific board directly
 python devtool.py build -b cyd-2usb
@@ -143,6 +151,7 @@ Find your board below and download the matching firmware from [Releases](https:/
 | **ESP32-WROOM-32** | `esp32-headless_firmware.bin` | Headless — GPIO LED on pin 2 |
 | **Wemos Lolin32 + OLED** | `wemos-lolin32-oled_firmware.bin` | 128x64 SSD1306 I2C (SDA=5, SCL=4, RST=16, addr=0x3C) |
 | **NodeMCU ESP32** | `esp32-headless_firmware.bin` | Use headless firmware |
+| **ESP32 DevKit + SSD1306 OLED** | `esp32-devkit-oled_firmware.bin` | 128x64 I2C OLED (SDA=GPIO21, SCL=GPIO22, addr=0x3C) |
 
 ### ESP32 TFT (ST7789) Boards
 
@@ -164,8 +173,8 @@ Find your board below and download the matching firmware from [Releases](https:/
 | Chip | Hashrate | Notes |
 |------|----------|-------|
 | **ESP32** (dual-core) | ~715 KH/s | Best performance, hardware SHA-256 |
-| **ESP32-S3** (dual-core) | ~280-400 KH/s | Software SHA-256, more RAM |
-| **ESP32-C3** (single-core) | ~200-300 KH/s | RISC-V, lowest power |
+| **ESP32-S3** (dual-core) | ~50-55 KH/s | Every share software-verified (#36); faster HW path (~300+ KH/s) in progress — see [#28](https://github.com/SneezeGUI/SparkMiner/issues/28) |
+| **ESP32-C3** (single-core) | TBD | HW SHA now wired with boot self-test (#39); software fallback ~1 KH/s. Numbers pending real-C3 validation ([#34](https://github.com/SneezeGUI/SparkMiner/issues/34)) |
 
 ### Board Compatibility Status
 
@@ -204,6 +213,7 @@ Find your board below and download the matching firmware from [Releases](https:/
 ---
 
 ## Configuration
+
 
 SparkMiner can be configured in three ways (in order of priority):
 
@@ -247,12 +257,24 @@ Create a `config.json` file on a FAT32-formatted microSD card:
 | `stats_proxy_url` | No | - | HTTP proxy for HTTPS APIs |
 | `enable_https_stats` | No | `false` | Direct HTTPS (unstable) |
 
+
 ### 2. WiFi Access Point Portal
+
+You can also automate configuration via the included Python tool:
+
+```bash
+python scripts/config_miner.py --host 192.168.4.1 --ssid "YourWiFi" --wifi-password "YourPass" --wallet "bc1q..."
+```
+This tool submits configuration directly to the device's AP portal. Run with `--help` for all options.
 
 If no SD card config is found, SparkMiner creates a WiFi access point:
 
 1. **Connect** to WiFi network: `SparkMiner-XXXX` (password: minebitcoin)
 2. **Open browser** to `http://192.168.4.1`
+   > **macOS users:** if the captive-portal page doesn't pop up automatically and
+   > Safari/Chrome shows `ERR_INTERNET_DISCONNECTED`, type the IP address
+   > `http://192.168.4.1` directly into the address bar (not a search term). The
+   > config page is served only by the device while it has no internet access. (Issue #29)
 3. You will see the **new dark-themed portal** with full configuration options:
     - Primary & Backup Pool settings
     - Display brightness, rotation, and color inversion
@@ -380,6 +402,7 @@ If you don't need live stats and want maximum stability:
 |------|-----|------|-----|-------|
 | **Public Pool** | `public-pool.io` | `21496` | 0% | Recommended, solo mining |
 | **FindMyBlock EU** | `eu.findmyblock.xyz` | `3335` | 0% | Solo mining, EU server |
+| **SoloLuck** | `stratum.sololuck.io` | `3335` | 0% | Solo mining, minimum difficulty 1 |
 | **CKPool Solo** | `solo.ckpool.org` | `3333` | 0.5% | Solo mining |
 | **Braiins Pool** | `stratum.braiins.com` | `3333` | 2% | Pooled mining |
 
@@ -485,7 +508,7 @@ The display features color-coded indicators for quick health monitoring:
 | Board | Device Display | Pool Reported | Power | Notes |
 |-------|---------------|---------------|-------|-------|
 | **ESP32-2432S028 (CYD)** | ~715-725 KH/s | ~715-725 KH/s | ~0.5W | Pipelined assembly v2 |
-| **ESP32-S3 (Freenove)** | ~280 KH/s | ~400 KH/s | ~0.4W | Midstate caching v3 |
+| **ESP32-S3 (Freenove)** | ~50-55 KH/s | ~50-55 KH/s | ~0.4W | Software-first SHA (#36); the old ~280-400 KH/s figures were invalid (zero shares accepted) |
 | **ESP32 Headless** | ~750 KH/s | ~750 KH/s | ~0.3W | No display overhead |
 
 > **Note:** Pool-reported hashrate is typically higher than device display due to share submission timing and pool difficulty adjustments.
@@ -649,6 +672,8 @@ SparkMiner/
 ├── include/
 │   └── board_config.h        # Hardware definitions
 ├── devtool.py                # Unified build/flash/monitor tool
+├── scripts/
+│   └── config_miner.py       # Command-line WiFi config tool
 ├── devtool.bat               # Windows launcher
 ├── devtool.toml              # Board & project configuration
 ├── platformio.ini            # PlatformIO build settings
@@ -658,6 +683,41 @@ SparkMiner/
 ---
 
 ## FAQ
+---
+
+## Command-Line Configuration Tool
+
+The script [`scripts/config_miner.py`](scripts/config_miner.py) lets you configure a SparkMiner device over WiFi from your computer, automating the AP portal process.
+
+### Usage
+
+```bash
+python scripts/config_miner.py --host 192.168.4.1 --ssid "YourWiFi" --wifi-password "YourPass" --wallet "bc1q..." [other options]
+```
+
+**Common options:**
+
+- `--host` (default: 192.168.4.1) — IP or hostname of the SparkMiner AP
+- `--ssid` — WiFi SSID to connect to
+- `--wifi-password` — WiFi password
+- `--wallet` — Bitcoin wallet address
+- `--worker` — Worker name (default: SparkMiner)
+- `--pool-url` — Pool host (default: public-pool.io)
+- `--pool-port` — Pool port (default: 21496)
+- `--brightness` — Display brightness (0-100)
+- `--screen-timeout` — Screen timeout in seconds
+- `--rotation` — Screen rotation (0-3)
+- `--invert` — Invert display colors (1/0)
+- `--stats-en` — Enable live stats (1/0)
+- `--stats-api` — Custom stats API URL
+- `--stats-proxy` — Stats HTTP proxy URL
+- `--https-stats` — Enable HTTPS stats (1/0)
+- `--timeout` — HTTP timeout (seconds)
+- `--insecure` — Skip TLS verification
+
+Run `python scripts/config_miner.py --help` for the full list and details.
+
+This is useful for scripting, automation, or headless device setup without using the web UI.
 
 **Q: Will I actually mine a Bitcoin block?**
 

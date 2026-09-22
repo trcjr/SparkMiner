@@ -1,0 +1,44 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: build ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Representative env per chip family (classic ESP32 / S3 / C3)
+        # + OLED variants so display envs get compile coverage
+        env: [esp32-2432s028, esp32-s3-devkit, esp32-c3-supermini, esp32-devkit-oled, wemos-lolin32-oled]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Build ${{ matrix.env }}
+        run: pio run -e ${{ matrix.env }}
+      - name: Upload test build
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testbuild-${{ matrix.env }}
+          # Shallow PR checkouts make post_build_merge.py fall back to "dev"
+          # for its output dir; firmware/ also holds committed historical
+          # binaries that must not be uploaded.
+          path: firmware/dev/*_factory.bin
+          if-no-files-found: warn
+          retention-days: 14
